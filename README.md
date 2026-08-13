@@ -88,6 +88,82 @@ npm start
 # 4. Abre http://localhost:3000 en el navegador
 ```
 
+## 🚀 START HERE: Setup Completo
+
+**👉 [QUICK_START.md](./QUICK_START.md)** - Configure todo en 10 minutos
+- 3 minutos: Airtable
+- 4 minutos: n8n
+- 2 minutos: Presupuestoya
+- 1 minuto: Testing
+
+---
+
+## 🏗️ Arquitectura Completa del Sistema
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   PRESUPUESTOYA PLATFORM                     │
+└─────────────────────────────────────────────────────────────┘
+
+                         FRONTEND
+                    ┌─────────────────┐
+                    │   Formulario    │
+                    │  (index.html)   │
+                    │  ✓ Nombre       │
+                    │  ✓ Teléfono     │
+                    │  ✓ Email        │
+                    │  ✓ CP (Región)  │
+                    │  ✓ Cerramiento  │
+                    └────────┬────────┘
+                             │
+                      Webhook POST
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   n8n Workflow  │
+                    │  - Validar      │
+                    │  - Detectar CP  │
+                    │  - Buscar Pro   │
+                    │  - Asignar      │
+                    │  - Notificar    │
+                    └────────┬────────┘
+                             │
+                    ┌────────┴────────┐
+                    ▼                 ▼
+            ┌──────────────┐   ┌────────────┐
+            │  Airtable    │   │   Email    │
+            │ - Leads      │   │  - Client  │
+            │ - Pros       │   │  - Pro     │
+            │ - Regions    │   │  - Admin   │
+            └──────┬───────┘   └────────────┘
+                   │
+          ⚡ Automático por CP
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+        ▼                     ▼
+    Profesional          Manual
+    Asignado             Review
+        │                  │
+    Email Notif       Admin Alert
+```
+
+### Flujo de Procesamiento
+
+```
+Lead → Validar → Detectar Región → Buscar Profesionales
+                                          │
+                                    ┌─────┴──────┐
+                                    │            │
+                                 ENCONTRADO   NO ENCONTRADO
+                                    │            │
+                            Crear + Asignar   Revisar Manual
+                                    │            │
+                                 Notificar   Alertar Admin
+```
+
+---
+
 ## 🎛️ Panel de Administración (⭐ Recomendado)
 
 **La forma más fácil de configurar el webhook SIN tocar código:**
@@ -351,13 +427,35 @@ En `index.html`, modifica el `<select>`:
 3. Añade validación en `handleSubmit()`
 4. Incluye en `leadData` object
 
-## 📚 Documentación Adicional
+## 📚 Documentación Completa
 
-- **[ADMIN_PANEL.md](./ADMIN_PANEL.md)** ⭐ - Panel para configurar webhook sin código
-- **[N8N_SETUP.md](./N8N_SETUP.md)** ⭐ - Guía paso a paso para n8n
+### 🟢 Empezar Aquí
+- **[QUICK_START.md](./QUICK_START.md)** ⭐ - Setup en 10 minutos (Airtable + n8n + Testing)
+
+### 🟦 Airtable
+- **[AIRTABLE_SETUP.md](./AIRTABLE_SETUP.md)** ⭐ - Estructura BD completa (Leads, Professionals, Regions)
+- Diseño de tablas con 20+ campos
+- Relaciones y lookups
+- Datos de ejemplo
+
+### 🟣 n8n Workflow
+- **[N8N_WORKFLOW_GUIDE.md](./N8N_WORKFLOW_GUIDE.md)** ⭐ - Guía completa del workflow
+- Flujo de automatización paso a paso
+- Configuración de cada nodo
+- Testing y troubleshooting
+
+- [N8N_SETUP.md](./N8N_SETUP.md) - Setup básico y primeros pasos
+- [n8n-workflow-complete.json](./n8n-workflow-complete.json) - Workflow completo (importable)
+
+### 🎛️ Panel Admin
+- **[ADMIN_PANEL.md](./ADMIN_PANEL.md)** - Panel sin código para configurar webhook
+- Cómo usar, seguridad, troubleshooting
+
+### 📝 General
 - [WEBHOOK_CONFIG.md](./WEBHOOK_CONFIG.md) - Guía general de webhooks
-- [INTEGRATIONS.md](./INTEGRATIONS.md) - Ejemplos de integración (Zapier, Slack, etc.)
-- [n8n-workflow-example.json](./n8n-workflow-example.json) - Workflow de ejemplo para importar
+- [INTEGRATIONS.md](./INTEGRATIONS.md) - Ejemplos de integración (Zapier, Slack, SMS, etc.)
+
+### 🔧 Técnico
 - [Validaciones](./app.js#L65) - Funciones de validación
 - [Estructura de datos](./app.js#L176) - Formato de leads
 
