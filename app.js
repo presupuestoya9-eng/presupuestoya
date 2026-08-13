@@ -1,6 +1,24 @@
 // Configuration
+function getWebhookConfig() {
+    // Try to get from localStorage (admin panel config)
+    const adminConfig = localStorage.getItem('presupuestoya_webhook_config');
+    if (adminConfig) {
+        try {
+            const config = JSON.parse(adminConfig);
+            return config.webhookUrl;
+        } catch (e) {
+            console.warn('Invalid admin config in localStorage');
+        }
+    }
+
+    // Fallback to environment variable or default
+    return process.env.WEBHOOK_URL || 'https://your-webhook-url.com/leads';
+}
+
 const CONFIG = {
-    WEBHOOK_URL: process.env.WEBHOOK_URL || 'https://your-webhook-url.com/leads',
+    get WEBHOOK_URL() {
+        return getWebhookConfig();
+    },
     TIMEOUT: 30000, // 30 seconds
 };
 

@@ -1,0 +1,140 @@
+{
+  "name": "Presupuestoya - Lead Handler",
+  "description": "Recibe leads del formulario presupuestoya.com, valida datos y los enruta por región",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "presupuestoya",
+        "responseCode": 200,
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "will-be-generated"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.postalCode}}",
+              "value2": "",
+              "operation": "notEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-postal-code",
+      "name": "Validate Postal Code",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.region}}",
+              "value2": "Madrid",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "id": "route-by-region",
+      "name": "Route by Region",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "defaultInputConnection": false
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        850,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "validate-postal-code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate-postal-code": {
+      "main": [
+        [
+          {
+            "node": "route-by-region",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route-by-region": {
+      "main": [
+        [
+          {
+            "node": "log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

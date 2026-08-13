@@ -88,6 +88,27 @@ npm start
 # 4. Abre http://localhost:3000 en el navegador
 ```
 
+## 🎛️ Panel de Administración (⭐ Recomendado)
+
+**La forma más fácil de configurar el webhook SIN tocar código:**
+
+1. **Abre el panel**: `http://localhost:3000/admin-config.html`
+2. **Obtén tu URL de n8n** (ver más abajo)
+3. **Pega la URL** en el panel
+4. **Haz clic en "Guardar"**
+5. **Prueba con un clic** - "Enviar Prueba"
+
+**Ventajas:**
+- ✅ No requiere editar código
+- ✅ Interfaz visual intuitiva
+- ✅ Pruebas automáticas incluidas
+- ✅ Indicador de estado en tiempo real
+- ✅ Guardado local automático
+
+👉 **[Ver guía completa del panel →](./ADMIN_PANEL.md)**
+
+---
+
 ## 🔧 Configuración del Webhook
 
 ### n8n
@@ -332,7 +353,11 @@ En `index.html`, modifica el `<select>`:
 
 ## 📚 Documentación Adicional
 
-- [WEBHOOK_CONFIG.md](./WEBHOOK_CONFIG.md) - Guía completa de webhook
+- **[ADMIN_PANEL.md](./ADMIN_PANEL.md)** ⭐ - Panel para configurar webhook sin código
+- **[N8N_SETUP.md](./N8N_SETUP.md)** ⭐ - Guía paso a paso para n8n
+- [WEBHOOK_CONFIG.md](./WEBHOOK_CONFIG.md) - Guía general de webhooks
+- [INTEGRATIONS.md](./INTEGRATIONS.md) - Ejemplos de integración (Zapier, Slack, etc.)
+- [n8n-workflow-example.json](./n8n-workflow-example.json) - Workflow de ejemplo para importar
 - [Validaciones](./app.js#L65) - Funciones de validación
 - [Estructura de datos](./app.js#L176) - Formato de leads
 
