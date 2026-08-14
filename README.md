@@ -438,7 +438,7 @@ En `index.html`, modifica el `<select>`:
 - Relaciones y lookups
 - Datos de ejemplo
 
-### 🟣 n8n Workflow
+### 🟣 n8n Workflow Principal
 - **[N8N_WORKFLOW_GUIDE.md](./N8N_WORKFLOW_GUIDE.md)** ⭐ - Guía completa del workflow
 - Flujo de automatización paso a paso
 - Configuración de cada nodo
@@ -446,6 +446,21 @@ En `index.html`, modifica el `<select>`:
 
 - [N8N_SETUP.md](./N8N_SETUP.md) - Setup básico y primeros pasos
 - [n8n-workflow-complete.json](./n8n-workflow-complete.json) - Workflow completo (importable)
+
+### 🔔 SMS/WhatsApp y Follow-up Automático
+- **[TWILIO_SETUP.md](./TWILIO_SETUP.md)** - SMS/WhatsApp para profesionales
+  - Crear cuenta Twilio
+  - Configurar WhatsApp Business (recomendado)
+  - Integrar en workflow n8n
+  - Ejemplos de mensajes
+
+- **[FOLLOWUP_AUTOMATION.md](./FOLLOWUP_AUTOMATION.md)** - Follow-up automático por tiempo
+  - Sistema de 3 fases (24h, 72h, 7 días)
+  - Escalación automática
+  - Emails y SMS automáticos
+  - Prevención de leads perdidos
+
+- [n8n-workflow-followup.json](./n8n-workflow-followup.json) - Workflow de follow-up (importable)
 
 ### 🎛️ Panel Admin
 - **[ADMIN_PANEL.md](./ADMIN_PANEL.md)** - Panel sin código para configurar webhook

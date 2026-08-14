@@ -234,6 +234,27 @@ Si TRUE → rama 2 (Revisar manual)
 - Subject: `🔔 Nuevo Lead Asignado: {{$json.name}}`
 - Body: Notifica al profesional sobre el nuevo lead
 
+### Nodo 12b: Send SMS/WhatsApp to Professional (Opcional)
+
+**Para agregar notificación directa al profesional:**
+
+1. Agrega nodo "Twilio - Send SMS" o "Twilio - Send WhatsApp"
+2. Credentials: Twilio (ver [TWILIO_SETUP.md](./TWILIO_SETUP.md))
+3. To: `{{$json.assignedProfessionalPhone}}`
+4. Message:
+   ```
+   🔔 {{name}}, nuevo lead en {{region}}
+   📍 {{postalCode}}
+   🪟 {{closureType}}
+   ☎️ {{phone}}
+   
+   Responde en 24h
+   ```
+
+**WhatsApp es recomendado** (más barato y directo)
+
+Ver: [TWILIO_SETUP.md](./TWILIO_SETUP.md) para setup completo
+
 ### Nodo 13: Alert Admin - No Professional Available
 
 **Similar**, pero:
