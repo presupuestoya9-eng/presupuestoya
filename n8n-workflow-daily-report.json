@@ -1,0 +1,286 @@
+{
+  "name": "Presupuestoya - Daily Report Generator",
+  "description": "Genera reportes diarios de leads, conversión, distribución geográfica y envía por email al equipo",
+  "tags": [
+    "presupuestoya",
+    "reporting",
+    "daily",
+    "analytics",
+    "email"
+  ],
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerType": "every",
+        "unit": "hours",
+        "value": 24,
+        "triggerAtHour": 8
+      },
+      "id": "1-schedule-daily",
+      "name": "Daily Report Trigger (8 AM)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        50,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND({DateReceived} >= TODAY(), {Status} ≠ 'empty')",
+          "fields": [
+            "Name",
+            "Email",
+            "Phone",
+            "PostalCode",
+            "Region",
+            "ClosureType",
+            "Status",
+            "DateReceived"
+          ],
+          "maxRecords": 500
+        }
+      },
+      "id": "2-get-today-leads",
+      "name": "Get Today's Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        250,
+        150
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Completed', {DateReceived} >= TODAY()-30)",
+          "fields": [
+            "Name",
+            "Status",
+            "Region",
+            "ClosureType",
+            "DateReceived"
+          ],
+          "maxRecords": 500
+        }
+      },
+      "id": "3-get-month-completions",
+      "name": "Get Month Completions (Analytics)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        250,
+        350
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Assigned', {DateAssigned} <= TODAY()-1)",
+          "fields": [
+            "Name",
+            "Region",
+            "Status",
+            "AssignedTo",
+            "DateAssigned"
+          ],
+          "maxRecords": 500
+        }
+      },
+      "id": "4-get-overdue-leads",
+      "name": "Get Overdue Leads (> 24h)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        250,
+        550
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Calculate daily metrics\nconst todayLeads = $input.all();\n\nconst metrics = {\n  totalToday: todayLeads.length,\n  byStatus: {\n    new: todayLeads.filter(l => l.fields?.Status === 'New').length,\n    assigned: todayLeads.filter(l => l.fields?.Status === 'Assigned').length,\n    inProgress: todayLeads.filter(l => l.fields?.Status === 'In Progress').length,\n    completed: todayLeads.filter(l => l.fields?.Status === 'Completed').length,\n    rejected: todayLeads.filter(l => l.fields?.Status === 'Rejected').length\n  },\n  byRegion: {},\n  byType: {}\n};\n\n// Count by region\ntodayLeads.forEach(lead => {\n  const region = lead.fields?.Region || 'Unknown';\n  metrics.byRegion[region] = (metrics.byRegion[region] || 0) + 1;\n});\n\n// Count by closure type\ntodayLeads.forEach(lead => {\n  const type = lead.fields?.ClosureType || 'Unknown';\n  metrics.byType[type] = (metrics.byType[type] || 0) + 1;\n});\n\n// Sort regions by count (descending)\nmetrics.topRegions = Object.entries(metrics.byRegion)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 5);\n\nreturn {\n  json: metrics\n};"
+      },
+      "id": "5-calculate-daily-metrics",
+      "name": "Calculate Daily Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Calculate monthly analytics for report\nconst completedLeads = $input.all();\n\nconst analytics = {\n  completedThisMonth: completedLeads.length,\n  byRegion: {},\n  byType: {},\n  conversionRate: 0\n};\n\n// Count by region\ncompletedLeads.forEach(lead => {\n  const region = lead.fields?.Region || 'Unknown';\n  analytics.byRegion[region] = (analytics.byRegion[region] || 0) + 1;\n});\n\n// Count by type\ncompletedLeads.forEach(lead => {\n  const type = lead.fields?.ClosureType || 'Unknown';\n  analytics.byType[type] = (analytics.byType[type] || 0) + 1;\n});\n\nreturn {\n  json: analytics\n};"
+      },
+      "id": "6-calculate-monthly-analytics",
+      "name": "Calculate Monthly Analytics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Calculate escalation metrics\nconst overdueLeads = $input.all();\n\nconst escalation = {\n  overdueTotal: overdueLeads.length,\n  by24h: overdueLeads.filter(l => {\n    const days = Math.floor((Date.now() - new Date(l.fields?.DateAssigned).getTime()) / (1000 * 60 * 60 * 24));\n    return days >= 1 && days < 3;\n  }).length,\n  by72h: overdueLeads.filter(l => {\n    const days = Math.floor((Date.now() - new Date(l.fields?.DateAssigned).getTime()) / (1000 * 60 * 60 * 24));\n    return days >= 3;\n  }).length,\n  byRegion: {}\n};\n\n// Group overdue by region\noverrueLeads.forEach(lead => {\n  const region = lead.fields?.Region || 'Unknown';\n  escalation.byRegion[region] = (escalation.byRegion[region] || 0) + 1;\n});\n\nreturn {\n  json: escalation\n};"
+      },
+      "id": "7-calculate-escalation",
+      "name": "Calculate Escalation Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "sales@presupuestoya.com",
+        "subject": "📊 Reporte Diario Presupuestoya - {{NOW().toLocaleDateString('es-ES')}}",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px;\">\n  <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px;\">\n    <h1 style=\"margin: 0; font-size: 28px;\">📊 Reporte Diario</h1>\n    <p style=\"margin: 5px 0 0 0; font-size: 14px;\">{{NOW().toLocaleDateString('es-ES', {weekday: 'long', month: 'long', day: 'numeric'})}}</p>\n  </div>\n\n  <!-- TODAY'S SUMMARY -->\n  <div style=\"background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1a73e8;\">\n    <h2 style=\"margin: 0 0 15px 0; color: #202124;\">📈 Resumen del Día</h2>\n    \n    <div style=\"display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;\">\n      <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center;\">\n        <div style=\"font-size: 32px; font-weight: bold; color: #1a73e8;\">{{todayMetrics.totalToday}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Leads Entrantes</div>\n      </div>\n      \n      <div style=\"background: #e6f4ea; padding: 15px; border-radius: 6px; text-align: center;\">\n        <div style=\"font-size: 32px; font-weight: bold; color: #34a853;\">{{todayMetrics.byStatus.assigned}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Asignados Hoy</div>\n      </div>\n      \n      <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; text-align: center;\">\n        <div style=\"font-size: 32px; font-weight: bold; color: #d33b27;\">{{todayMetrics.byStatus.rejected}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Rechazados</div>\n      </div>\n    </div>\n  </div>\n\n  <!-- STATUS BREAKDOWN -->\n  <div style=\"background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #fbbc04;\">\n    <h3 style=\"margin: 0 0 15px 0; color: #202124;\">🔄 Estado de Leads</h3>\n    \n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed;\"><strong>Nuevos (New)</strong></td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{todayMetrics.byStatus.new}}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed;\"><strong>Asignados (Assigned)</strong></td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{todayMetrics.byStatus.assigned}}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed;\"><strong>En Progreso (In Progress)</strong></td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{todayMetrics.byStatus.inProgress}}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed;\"><strong>Completados (Completed)</strong></td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{todayMetrics.byStatus.completed}}</td>\n      </tr>\n    </table>\n  </div>\n\n  <!-- GEOGRAPHIC DISTRIBUTION -->\n  <div style=\"background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #34a853;\">\n    <h3 style=\"margin: 0 0 15px 0; color: #202124;\">🗺️ Distribución Geográfica</h3>\n    \n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr style=\"background: #f8f9fa;\">\n        <th style=\"padding: 10px; text-align: left; border-bottom: 2px solid #dadce0;\">Región</th>\n        <th style=\"padding: 10px; text-align: right; border-bottom: 2px solid #dadce0;\">Leads</th>\n        <th style=\"padding: 10px; text-align: right; border-bottom: 2px solid #dadce0;\">%</th>\n      </tr>\n      {{#topRegionsRows}}\n      <tr>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed;\">{{region}}</td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{count}}</td>\n        <td style=\"padding: 10px; border-bottom: 1px solid #e8eaed; text-align: right;\">{{percent}}%</td>\n      </tr>\n      {{/topRegionsRows}}\n    </table>\n  </div>\n\n  <!-- CLOSURE TYPE BREAKDOWN -->\n  <div style=\"background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ab47bc;\">\n    <h3 style=\"margin: 0 0 15px 0; color: #202124;\">🪟 Por Tipo de Servicio</h3>\n    \n    <div style=\"display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;\">\n      {{#closureTypeRows}}\n      <div style=\"background: #f8f9fa; padding: 12px; border-radius: 6px;\">\n        <div style=\"font-weight: 600; color: #202124;\">{{type}}</div>\n        <div style=\"font-size: 20px; font-weight: bold; color: #1a73e8; margin-top: 5px;\">{{count}}</div>\n      </div>\n      {{/closureTypeRows}}\n    </div>\n  </div>\n\n  <!-- OVERDUE ALERTS -->\n  {{#hasOverdue}}\n  <div style=\"background: #fce8e6; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #d33b27;\">\n    <h3 style=\"margin: 0 0 15px 0; color: #d33b27;\">🚨 Leads Sin Respuesta</h3>\n    \n    <div style=\"display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;\">\n      <div>\n        <div style=\"font-size: 24px; font-weight: bold; color: #d33b27;\">{{escalation.overdueTotal}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Total sin respuesta</div>\n      </div>\n      \n      <div>\n        <div style=\"font-size: 24px; font-weight: bold; color: #d33b27;\">{{escalation.by72h}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Críticos (>72h)</div>\n      </div>\n    </div>\n    \n    <p style=\"color: #d33b27; margin: 15px 0 0 0; font-size: 13px;\">\n      ⚠️ Acción requerida: Revisar Airtable vista \"Críticos\" para escalación\n    </p>\n  </div>\n  {{/hasOverdue}}\n\n  <!-- MONTHLY STATS -->\n  <div style=\"background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #1a73e8;\">\n    <h3 style=\"margin: 0 0 15px 0; color: #202124;\">📅 Estadísticas del Mes</h3>\n    \n    <div style=\"display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;\">\n      <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px;\">\n        <div style=\"font-size: 24px; font-weight: bold; color: #34a853;\">{{analytics.completedThisMonth}}</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Completados (mes)</div>\n      </div>\n      \n      <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px;\">\n        <div style=\"font-size: 24px; font-weight: bold; color: #1a73e8;\">{{conversionRate}}%</div>\n        <div style=\"font-size: 13px; color: #5f6368; margin-top: 5px;\">Tasa conversión</div>\n      </div>\n    </div>\n  </div>\n\n  <!-- CALL TO ACTION -->\n  <div style=\"background: #e8f0fe; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #1a73e8;\">\n    <p style=\"margin: 0; color: #202124;\">\n      👉 <strong><a href=\"https://airtable.com/your-base-link\" style=\"color: #1a73e8; text-decoration: none;\">Ver Dashboard Completo en Airtable</a></strong>\n    </p>\n    <p style=\"margin: 10px 0 0 0; font-size: 12px; color: #5f6368;\">\n      Actualizado automáticamente cada día a las 8 AM\n    </p>\n  </div>\n\n  <div style=\"text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e8eaed; font-size: 12px; color: #5f6368;\">\n    <p style=\"margin: 0;\">© 2024 Presupuestoya. Todos los derechos reservados.</p>\n  </div>\n</div>"
+      },
+      "id": "8-send-daily-report",
+      "name": "Send Daily Report Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        750,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "9-log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        950,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "1-schedule-daily": {
+      "main": [
+        [
+          {
+            "node": "2-get-today-leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1-schedule-daily": {
+      "main": [
+        [
+          {
+            "node": "3-get-month-completions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1-schedule-daily": {
+      "main": [
+        [
+          {
+            "node": "4-get-overdue-leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2-get-today-leads": {
+      "main": [
+        [
+          {
+            "node": "5-calculate-daily-metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3-get-month-completions": {
+      "main": [
+        [
+          {
+            "node": "6-calculate-monthly-analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4-get-overdue-leads": {
+      "main": [
+        [
+          {
+            "node": "7-calculate-escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5-calculate-daily-metrics": {
+      "main": [
+        [
+          {
+            "node": "8-send-daily-report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8-send-daily-report": {
+      "main": [
+        [
+          {
+            "node": "9-log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

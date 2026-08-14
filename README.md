@@ -462,6 +462,23 @@ En `index.html`, modifica el `<select>`:
 
 - [n8n-workflow-followup.json](./n8n-workflow-followup.json) - Workflow de follow-up (importable)
 
+### 📊 Analytics y Reportes
+- **[AIRTABLE_ANALYTICS.md](./AIRTABLE_ANALYTICS.md)** - Dashboard en Airtable
+  - 6+ vistas de análisis
+  - KPI overview
+  - Por región, estado, profesional
+  - Campos de fórmula
+  - Mobile optimized
+
+- **[DAILY_REPORTS.md](./DAILY_REPORTS.md)** - Reportes diarios automáticos
+  - Email automático cada mañana
+  - Métricas de conversión
+  - Distribución geográfica
+  - Alertas críticas
+  - Interpretación de resultados
+
+- [n8n-workflow-daily-report.json](./n8n-workflow-daily-report.json) - Workflow de reportes (importable)
+
 ### 🎛️ Panel Admin
 - **[ADMIN_PANEL.md](./ADMIN_PANEL.md)** - Panel sin código para configurar webhook
 - Cómo usar, seguridad, troubleshooting
