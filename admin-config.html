@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Presupuestoya</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #202124;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #5f6368;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8eaed;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dadce0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background: #e8f0fe;
+            border-left: 4px solid #1a73e8;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #202124;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: #fce8e6;
+            border-left: 4px solid #d33b27;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #202124;
+            line-height: 1.6;
+        }
+
+        .success-box {
+            background: #e6f4ea;
+            border-left: 4px solid #34a853;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #202124;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #1557b0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-test {
+            background: #34a853;
+            color: white;
+        }
+
+        .btn-test:hover {
+            background: #2d7a4a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+        }
+
+        .btn-reset {
+            background: #f1f3f4;
+            color: #202124;
+        }
+
+        .btn-reset:hover {
+            background: #e8eaed;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .test-result {
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .test-result.show {
+            display: block;
+        }
+
+        .test-result.success {
+            border-left: 4px solid #34a853;
+            background: #e6f4ea;
+        }
+
+        .test-result.error {
+            border-left: 4px solid #d33b27;
+            background: #fce8e6;
+        }
+
+        .test-result pre {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 11px;
+            margin-top: 8px;
+            border: 1px solid #dadce0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .status-success {
+            background: #34a853;
+        }
+
+        .status-error {
+            background: #d33b27;
+        }
+
+        .status-pending {
+            background: #fbbc04;
+        }
+
+        small {
+            display: block;
+            margin-top: 4px;
+            color: #5f6368;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Configuración de Webhook</h1>
+        <p class="subtitle">Gestiona la URL de tu webhook de n8n para recibir leads</p>
+
+        <div class="info-box">
+            <strong>ℹ️ Información:</strong> Esta configuración se guarda localmente en tu navegador. Los cambios afectarán al formulario de presupuestoya.
+        </div>
+
+        <form id="configForm">
+            <div class="section">
+                <h2 class="section-title">Webhook n8n</h2>
+
+                <label for="webhookUrl">URL del Webhook</label>
+                <input
+                    type="url"
+                    id="webhookUrl"
+                    name="webhookUrl"
+                    placeholder="https://tu-instancia.n8n.cloud/webhook/presupuestoya"
+                    required
+                >
+                <p class="hint">
+                    <strong>¿Cómo obtener tu URL de n8n?</strong><br>
+                    1. Abre tu instancia de n8n<br>
+                    2. Crea un nuevo workflow<br>
+                    3. Agrega un trigger "Webhook"<br>
+                    4. Copia la URL del webhook (ej: https://tu-instancia.n8n.cloud/webhook/presupuestoya)<br>
+                    5. Pégala arriba
+                </p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Información del Webhook</h2>
+
+                <label>Método HTTP</label>
+                <p class="hint">POST (automático, no es modificable)</p>
+
+                <label for="webhookDescription" style="margin-top: 16px;">Descripción (opcional)</label>
+                <textarea
+                    id="webhookDescription"
+                    name="webhookDescription"
+                    placeholder="Ej: Webhook de prueba para validar enrutamiento por código postal"
+                ></textarea>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Datos de Prueba</h2>
+                <div class="info-box">
+                    Prueba rápida: Completa los campos y haz clic en "Enviar Prueba" para verificar que el webhook funciona correctamente.
+                </div>
+
+                <label for="testName">Nombre de prueba</label>
+                <input type="text" id="testName" placeholder="Juan García López">
+
+                <label for="testPhone">Teléfono de prueba</label>
+                <input type="text" id="testPhone" placeholder="+34 612345678">
+
+                <label for="testEmail">Email de prueba</label>
+                <input type="text" id="testEmail" placeholder="test@example.com">
+
+                <label for="testPostalCode">Código postal de prueba</label>
+                <input type="text" id="testPostalCode" placeholder="28001" maxlength="5">
+
+                <label for="testClosureType">Tipo de cerramiento</label>
+                <select id="testClosureType" style="width: 100%; padding: 12px; border: 2px solid #dadce0; border-radius: 6px; font-size: 14px; margin-bottom: 12px;">
+                    <option value="ventanas">Ventanas</option>
+                    <option value="puertas">Puertas de entrada</option>
+                    <option value="cerramientos">Cerramientos de terraza</option>
+                    <option value="divisiones">Divisiones de vidrio</option>
+                    <option value="armarios">Armarios empotrados</option>
+                </select>
+            </div>
+
+            <div id="successMessage" class="success-box">
+                ✓ Configuración guardada correctamente
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-save">💾 Guardar Configuración</button>
+                <button type="button" id="testBtn" class="btn-test">🧪 Enviar Prueba</button>
+                <button type="button" id="resetBtn" class="btn-reset">🔄 Restaurar</button>
+            </div>
+
+            <div id="testResult" class="test-result">
+                <div id="testResultContent"></div>
+            </div>
+
+            <div class="section" style="margin-top: 32px;">
+                <h2 class="section-title">Estado Actual</h2>
+                <div id="statusInfo" style="font-size: 13px; line-height: 1.8; color: #5f6368;">
+                    Cargando...
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Instrucciones para n8n</h2>
+                <div class="code-block">
+# Workflow básico en n8n:
+1. Trigger: Webhook (POST)
+2. Node: Airtable - Create Record
+3. Node: Email - Send confirmation
+
+Datos esperados en webhook:
+{
+  "name": "string",
+  "phone": "string",
+  "email": "string",
+  "postalCode": "string",
+  "region": "string",
+  "closureType": "string",
+  "timestamp": "ISO date"
+}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const CONFIG_KEY = 'presupuestoya_webhook_config';
+        const DEFAULT_WEBHOOK = 'https://webhook.site/your-unique-id'; // RequestBin de prueba
+
+        // Load configuration on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePanel);
+        } else {
+            initializePanel();
+        }
+
+        function initializePanel() {
+            try {
+                loadConfig();
+                updateStatus();
+                const form = document.getElementById('configForm');
+                const testBtn = document.getElementById('testBtn');
+                const resetBtn = document.getElementById('resetBtn');
+
+                if (form) form.addEventListener('submit', saveConfig);
+                if (testBtn) testBtn.addEventListener('click', sendTest);
+                if (resetBtn) resetBtn.addEventListener('click', resetConfig);
+            } catch (e) {
+                console.error('Error inicializando panel:', e);
+            }
+        }
+
+        function loadConfig() {
+            const config = localStorage.getItem(CONFIG_KEY);
+            if (config) {
+                const parsed = JSON.parse(config);
+                document.getElementById('webhookUrl').value = parsed.webhookUrl || '';
+                document.getElementById('webhookDescription').value = parsed.description || '';
+            }
+        }
+
+        function saveConfig(e) {
+            e.preventDefault();
+
+            const webhookUrl = document.getElementById('webhookUrl').value.trim();
+
+            if (!webhookUrl) {
+                alert('Por favor, ingresa la URL del webhook');
+                return;
+            }
+
+            if (!webhookUrl.startsWith('http://') && !webhookUrl.startsWith('https://')) {
+                alert('La URL debe comenzar con http:// o https://');
+                return;
+            }
+
+            const config = {
+                webhookUrl: webhookUrl,
+                description: document.getElementById('webhookDescription').value.trim(),
+                savedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+            // Show success message
+            const successBox = document.getElementById('successMessage');
+            successBox.style.display = 'block';
+            setTimeout(() => {
+                successBox.style.display = 'none';
+            }, 3000);
+
+            updateStatus();
+        }
+
+        async function sendTest(e) {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const config = localStorage.getItem(CONFIG_KEY);
+            if (!config) {
+                alert('Por favor, guarda la configuración primero');
+                return;
+            }
+
+            const parsed = JSON.parse(config);
+            const webhookUrl = parsed.webhookUrl;
+
+            const testData = {
+                timestamp: new Date().toISOString(),
+                name: safeDOMAccess('testName', 'value') || 'Test User',
+                phone: safeDOMAccess('testPhone', 'value') || '+34 612345678',
+                email: safeDOMAccess('testEmail', 'value') || 'test@presupuestoya.com',
+                postalCode: safeDOMAccess('testPostalCode', 'value') || '28001',
+                region: getRegionFromPostalCode(safeDOMAccess('testPostalCode', 'value') || '28001'),
+                closureType: safeDOMAccess('testClosureType', 'value'),
+                message: 'Envío de prueba desde panel de administración',
+                source: 'presupuestoya-admin-test',
+                userAgent: navigator.userAgent
+            };
+
+            const resultDiv = document.getElementById('testResult');
+            const contentDiv = document.getElementById('testResultContent');
+
+            if (resultDiv && contentDiv) {
+                contentDiv.innerHTML = '<div class="spinner"></div> Enviando prueba...';
+                resultDiv.classList.add('show');
+            }
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData),
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                if (response.ok) {
+                    resultDiv.classList.remove('error');
+                    resultDiv.classList.add('success');
+                    contentDiv.innerHTML = `
+                        <div style="margin-bottom: 12px;">
+                            <span class="status-indicator status-success"></span>
+                            <strong>✓ Envío exitoso</strong>
+                        </div>
+                        <small>Respuesta del servidor: ${response.status} ${response.statusText}</small>
+                        <details style="margin-top: 12px;">
+                            <summary style="cursor: pointer; font-weight: 600; color: #1a73e8;">Ver detalles</summary>
+                            <pre>${JSON.stringify(testData, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    resultDiv.classList.remove('success');
+                    resultDiv.classList.add('error');
+                    contentDiv.innerHTML = `
+                        <div style="margin-bottom: 12px;">
+                            <span class="status-indicator status-error"></span>
+                            <strong>✗ Error ${response.status}</strong>
+                        </div>
+                        <small>${response.statusText}</small>
+                        <details style="margin-top: 12px;">
+                            <summary style="cursor: pointer; font-weight: 600; color: #d33b27;">Ver detalles</summary>
+                            <pre>${JSON.stringify(testData, null, 2)}</pre>
+                        </details>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.classList.remove('success');
+                resultDiv.classList.add('error');
+                contentDiv.innerHTML = `
+                    <div style="margin-bottom: 12px;">
+                        <span class="status-indicator status-error"></span>
+                        <strong>✗ Error de conexión</strong>
+                    </div>
+                    <small>${error.message}</small>
+                    <p style="margin-top: 12px; font-size: 12px;">Verifica que:</p>
+                    <ul style="margin-left: 20px; font-size: 12px;">
+                        <li>La URL del webhook es correcta</li>
+                        <li>El webhook está habilitado en n8n</li>
+                        <li>La URL comienza con https://</li>
+                    </ul>
+                `;
+            }
+        }
+
+        function resetConfig(e) {
+            e.preventDefault();
+            if (confirm('¿Restaurar la configuración predeterminada?')) {
+                localStorage.removeItem(CONFIG_KEY);
+                loadConfig();
+                updateStatus();
+                alert('Configuración restaurada');
+            }
+        }
+
+        function updateStatus() {
+            const config = localStorage.getItem(CONFIG_KEY);
+            const statusInfo = document.getElementById('statusInfo');
+
+            if (config) {
+                const parsed = JSON.parse(config);
+                const date = new Date(parsed.savedAt).toLocaleString('es-ES');
+                statusInfo.innerHTML = `
+                    <span class="status-indicator status-success"></span>
+                    <strong>Webhook configurado</strong><br>
+                    <small>URL: ${parsed.webhookUrl}</small><br>
+                    <small>Guardado: ${date}</small>
+                `;
+            } else {
+                statusInfo.innerHTML = `
+                    <span class="status-indicator status-pending"></span>
+                    <strong>Sin configurar</strong><br>
+                    <small>Completa el formulario y guarda los cambios</small>
+                `;
+            }
+        }
+
+        function getRegionFromPostalCode(postalCode) {
+            const regions = {
+                '28': 'Madrid',
+                '08': 'Barcelona',
+                '41': 'Sevilla',
+                '46': 'Valencia',
+                '29': 'Málaga',
+            };
+            const prefix = postalCode.substring(0, 2);
+            return regions[prefix] || 'Desconocida';
+        }
+
+        function safeDOMAccess(elementId, property) {
+            try {
+                const element = document.getElementById(elementId);
+                if (element && property in element) {
+                    return element[property];
+                }
+                return null;
+            } catch (e) {
+                console.error('Error accediendo a DOM:', elementId, e);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>

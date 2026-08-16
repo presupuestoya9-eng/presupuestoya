@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Solicita tu presupuesto de ventanas y cerramientos a medida. Respuesta rápida en 24h.">
+    <meta name="theme-color" content="#1a73e8">
+    <title>Presupuestoya - Ventanas y Cerramientos a Medida</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">Presupuestoya</div>
+            <p class="tagline">Ventanas y cerramientos a medida</p>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Obtén tu presupuesto sin compromiso</h1>
+            <p class="hero-subtitle">Respuesta en 24 horas • Presupuestos personalizados</p>
+        </section>
+
+        <!-- Main Form -->
+        <main class="form-wrapper">
+            <form id="leadForm" class="form" novalidate>
+                <div class="form-group">
+                    <label for="name">Nombre completo</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Tu nombre"
+                        required
+                        aria-required="true"
+                    >
+                    <span class="error-message" id="nameError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        placeholder="Ej: +34 912 345 678"
+                        required
+                        aria-required="true"
+                    >
+                    <span class="error-message" id="phoneError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="tu@email.com"
+                        required
+                        aria-required="true"
+                    >
+                    <span class="error-message" id="emailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="postalCode">Código postal</label>
+                    <input
+                        type="text"
+                        id="postalCode"
+                        name="postalCode"
+                        placeholder="28001"
+                        maxlength="5"
+                        required
+                        aria-required="true"
+                    >
+                    <span class="error-message" id="postalCodeError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="closureType">Tipo de cerramiento</label>
+                    <select id="closureType" name="closureType" required aria-required="true">
+                        <option value="">Selecciona una opción</option>
+                        <option value="ventanas">Ventanas</option>
+                        <option value="puertas">Puertas de entrada</option>
+                        <option value="cerramientos">Cerramientos de terraza</option>
+                        <option value="divisiones">Divisiones de vidrio</option>
+                        <option value="armarios">Armarios empotrados</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                    <span class="error-message" id="closureTypeError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Detalles adicionales (opcional)</label>
+                    <textarea
+                        id="message"
+                        name="message"
+                        placeholder="Cuéntanos más detalles: número de unidades, materiales preferidos, etc."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <div class="consent">
+                    <input
+                        type="checkbox"
+                        id="consent"
+                        name="consent"
+                        required
+                        aria-required="true"
+                    >
+                    <label for="consent" class="consent-label">
+                        Autorizo a Presupuestoya a contactarme para enviarme mi presupuesto personalizado
+                    </label>
+                    <span class="error-message" id="consentError"></span>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    Solicitar presupuesto
+                </button>
+
+                <p class="form-disclaimer">
+                    Tu información está segura. No compartiremos tus datos con terceros.
+                </p>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message hidden">
+                <div class="success-icon">✓</div>
+                <h2>¡Presupuesto solicitado!</h2>
+                <p>Nos pondremos en contacto contigo en las próximas 24 horas.</p>
+                <p class="success-subtext">Hemos enviado un email de confirmación a <strong id="confirmEmail"></strong></p>
+                <button type="button" class="btn-secondary" id="newFormBtn">
+                    Solicitar otro presupuesto
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Presupuestoya. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="#privacy">Política de privacidad</a>
+                <a href="#terms">Términos de servicio</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Check if webhook is configured on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const config = localStorage.getItem('presupuestoya_webhook_config');
+            const webhookUrl = config ? JSON.parse(config).webhookUrl : null;
+
+            if (!webhookUrl || webhookUrl === 'https://your-webhook-url.com/leads') {
+                // Show admin panel link if not configured
+                const adminLink = document.createElement('div');
+                adminLink.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+                adminLink.innerHTML = `
+                    <a href="admin-config.html" style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        background: #1a73e8;
+                        color: white;
+                        padding: 12px 16px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        font-size: 14px;
+                        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+                        transition: all 0.3s ease;
+                    '
+                    onmouseover="this.style.boxShadow='0 6px 20px rgba(26, 115, 232, 0.4)'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.boxShadow='0 4px 12px rgba(26, 115, 232, 0.3)'; this.style.transform='translateY(0)'">
+                        ⚙️ Configurar Webhook
+                    </a>
+                `;
+                document.body.appendChild(adminLink);
+            }
+        });
+    </script>
+</body>
+</html>

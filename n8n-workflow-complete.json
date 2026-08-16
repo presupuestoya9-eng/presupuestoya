@@ -1,0 +1,497 @@
+{
+  "name": "Presupuestoya - Lead Processing & Routing",
+  "description": "Workflow completo: Recibe leads, valida datos, busca profesionales disponibles, asigna automáticamente y envía notificaciones",
+  "tags": [
+    "presupuestoya",
+    "leads",
+    "routing",
+    "airtable",
+    "email"
+  ],
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "presupuestoya",
+        "responseCode": 200,
+        "options": {}
+      },
+      "id": "1-webhook",
+      "name": "Webhook - Receive Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        50,
+        300
+      ],
+      "webhookId": "generated-on-first-run"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validate and enrich lead data\nreturn {\n  json: {\n    name: $json.name?.trim() || '',\n    email: $json.email?.toLowerCase().trim() || '',\n    phone: $json.phone?.replace(/\\s/g, '') || '',\n    postalCode: $json.postalCode?.trim() || '',\n    region: $json.region || '',\n    closureType: $json.closureType || '',\n    message: $json.message?.trim() || '',\n    timestamp: $json.timestamp || new Date().toISOString(),\n    source: $json.source || 'presupuestoya-web'\n  }\n};"
+      },
+      "id": "2-validate-lead",
+      "name": "Validate & Enrich Lead Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.postalCode}}",
+              "value2": "",
+              "operation": "notEmpty"
+            },
+            {
+              "value1": "={{$json.email}}",
+              "value2": "",
+              "operation": "notEmpty"
+            },
+            {
+              "value1": "={{$json.name}}",
+              "value2": "",
+              "operation": "notEmpty"
+            }
+          ]
+        }
+      },
+      "id": "3-validate-required",
+      "name": "Check Required Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Regions",
+        "options": {
+          "fields": [
+            "Name",
+            "PostalCodePrefix"
+          ]
+        }
+      },
+      "id": "4-get-regions",
+      "name": "Get All Regions",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        650,
+        200
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Find matching region by postal code prefix\nconst postalCodePrefix = $json.postalCode.substring(0, 2);\nconst regions = $input.all();\n\nlet matchedRegion = null;\nfor (const region of regions) {\n  if (region.fields?.PostalCodePrefix === postalCodePrefix) {\n    matchedRegion = region.fields?.Name;\n    break;\n  }\n}\n\nreturn {\n  json: {\n    ...($json),\n    detectedRegion: matchedRegion || 'Unknown',\n    postalCodePrefix: postalCodePrefix\n  }\n};"
+      },
+      "id": "5-match-region",
+      "name": "Match Region by Postal Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Professionals",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Active', {Available} = TRUE())",
+          "fields": [
+            "Name",
+            "Email",
+            "Phone",
+            "Region",
+            "Specialties",
+            "Rating"
+          ],
+          "maxRecords": 100
+        }
+      },
+      "id": "6-get-professionals",
+      "name": "Get Available Professionals",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        200
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Filter professionals by region and specialty\nconst detectedRegion = $json.detectedRegion;\nconst closureType = $json.closureType;\nconst professionals = $input.all();\n\nconst matchedProfessionals = professionals.filter(prof => {\n  const regions = prof.fields?.Region || [];\n  const specialties = prof.fields?.Specialties || [];\n  \n  const regionMatch = regions.includes(detectedRegion);\n  const specialtyMatch = specialties.includes(closureType) || specialties.length === 0;\n  \n  return regionMatch && specialtyMatch;\n});\n\n// Sort by rating (highest first)\nmatchedProfessionals.sort((a, b) => {\n  const ratingA = a.fields?.Rating || 0;\n  const ratingB = b.fields?.Rating || 0;\n  return ratingB - ratingA;\n});\n\nconst bestProfessional = matchedProfessionals[0];\n\nreturn {\n  json: {\n    ...($json),\n    matchedProfessionals: matchedProfessionals.length,\n    assignedProfessional: bestProfessional || null,\n    assignedProfessionalId: bestProfessional?.id || null,\n    assignedProfessionalName: bestProfessional?.fields?.Name || 'Unassigned',\n    assignedProfessionalEmail: bestProfessional?.fields?.Email || '',\n    professonalNotFound: matchedProfessionals.length === 0\n  }\n};"
+      },
+      "id": "7-select-best-professional",
+      "name": "Select Best Professional (Rating & Specialty)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.professonalNotFound}}",
+              "operation": "isFalse"
+            }
+          ]
+        }
+      },
+      "id": "8-professional-found",
+      "name": "Professional Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "create",
+        "table": "Leads",
+        "fields": {
+          "Name": "={{$json.name}}",
+          "Email": "={{$json.email}}",
+          "Phone": "={{$json.phone}}",
+          "PostalCode": "={{$json.postalCode}}",
+          "Region": "={{$json.detectedRegion}}",
+          "ClosureType": "={{$json.closureType}}",
+          "Message": "={{$json.message}}",
+          "Status": "Assigned",
+          "AssignedTo": [
+            "={{$json.assignedProfessionalId}}"
+          ],
+          "Source": "presupuestoya-web"
+        }
+      },
+      "id": "9-create-lead-assigned",
+      "name": "Create Lead (With Assignment)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        1650,
+        100
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "create",
+        "table": "Leads",
+        "fields": {
+          "Name": "={{$json.name}}",
+          "Email": "={{$json.email}}",
+          "Phone": "={{$json.phone}}",
+          "PostalCode": "={{$json.postalCode}}",
+          "Region": "={{$json.detectedRegion}}",
+          "ClosureType": "={{$json.closureType}}",
+          "Message": "{{$json.message}}\\n\\n[MANUAL REVIEW REQUIRED] No professionals available",
+          "Status": "New",
+          "Source": "presupuestoya-web"
+        }
+      },
+      "id": "10-create-lead-manual",
+      "name": "Create Lead (Manual Review)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        1650,
+        300
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "✓ Tu solicitud de presupuesto ha sido recibida",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #1a73e8; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">✓ Presupuesto en Proceso</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>Hola <strong>{{$json.name}}</strong>,</p>\n    <p>Recibimos tu solicitud de presupuesto para <strong>{{$json.closureType}}</strong>.</p>\n    \n    <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <h3 style=\"margin-top: 0;\">Detalles de tu solicitud:</h3>\n      <ul style=\"margin: 10px 0;\">\n        <li><strong>Código Postal:</strong> {{$json.postalCode}}</li>\n        <li><strong>Región:</strong> {{$json.detectedRegion}}</li>\n        <li><strong>Tipo de Cerramiento:</strong> {{$json.closureType}}</li>\n        <li><strong>Teléfono:</strong> {{$json.phone}}</li>\n      </ul>\n    </div>\n    \n    <h3>¿Qué sucede ahora?</h3>\n    <p>Un profesional especializado en <strong>{{$json.closureType}}</strong> de {{$json.detectedRegion}} se pondrá en contacto contigo en las próximas <strong>24 horas</strong> para ofrecerte un presupuesto personalizado.</p>\n    \n    <div style=\"background: #e6f4ea; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #34a853;\">\n      <p style=\"margin: 0;\"><strong>📞 Profesional Asignado:</strong><br>\n      {{$json.assignedProfessionalName}}<br>\n      <a href=\"mailto:{{$json.assignedProfessionalEmail}}\" style=\"color: #1a73e8;\">{{$json.assignedProfessionalEmail}}</a></p>\n    </div>\n    \n    <p style=\"color: #5f6368; font-size: 13px;\">\n      Si tienes preguntas urgentes, responde a este email.<br>\n      No compartas tu información de contacto con terceros.\n    </p>\n  </div>\n  <div style=\"background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; color: #5f6368; font-size: 12px;\">\n    <p style=\"margin: 0;\">© 2024 Presupuestoya. Todos los derechos reservados.</p>\n  </div>\n</div>"
+      },
+      "id": "11-email-to-lead",
+      "name": "Send Confirmation Email to Lead",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "={{$json.assignedProfessionalEmail}}",
+        "subject": "🔔 Nuevo Lead Asignado: {{$json.name}} ({{$json.closureType}})",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #34a853; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">🔔 Nuevo Lead Asignado</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>Hola <strong>{{$json.assignedProfessionalName}}</strong>,</p>\n    <p>Te hemos asignado un nuevo lead que coincide con tu especialidad y región.</p>\n    \n    <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <h3 style=\"margin-top: 0;\">📋 Datos del Cliente:</h3>\n      <ul style=\"margin: 10px 0;\">\n        <li><strong>Nombre:</strong> {{$json.name}}</li>\n        <li><strong>Email:</strong> <a href=\"mailto:{{$json.email}}\">{{$json.email}}</a></li>\n        <li><strong>Teléfono:</strong> <a href=\"tel:{{$json.phone}}\">{{$json.phone}}</a></li>\n        <li><strong>Código Postal:</strong> {{$json.postalCode}}</li>\n        <li><strong>Región:</strong> {{$json.detectedRegion}}</li>\n        <li><strong>Tipo de Cerramiento:</strong> {{$json.closureType}}</li>\n      </ul>\n    </div>\n    \n    {{#if $json.message}}\n    <div style=\"background: #fef8e7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #fbbc04;\">\n      <h4 style=\"margin-top: 0;\">💬 Notas del Cliente:</h4>\n      <p style=\"margin: 0; white-space: pre-wrap;\">{{$json.message}}</p>\n    </div>\n    {{/if}}\n    \n    <h3>⏰ Acciones Recomendadas:</h3>\n    <ol>\n      <li>Contacta al cliente <strong>hoy</strong> por teléfono o email</li>\n      <li>Ofrece un presupuesto personalizado</li>\n      <li>Actualiza el estado del lead en tu panel</li>\n    </ol>\n    \n    <p style=\"color: #5f6368; font-size: 13px;\">\n      ⚡ Responde rápido: Los clientes esperan contacto en 24 horas.\n    </p>\n  </div>\n  <div style=\"background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; color: #5f6368; font-size: 12px;\">\n    <p style=\"margin: 0;\">© 2024 Presupuestoya. Todos los derechos reservados.</p>\n  </div>\n</div>"
+      },
+      "id": "12-email-to-professional",
+      "name": "Send New Lead Email to Professional",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "admin@presupuestoya.com",
+        "subject": "⚠️ Lead Sin Profesional Disponible: {{$json.name}} ({{$json.detectedRegion}})",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #d33b27; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">⚠️ Revisión Manual Requerida</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p><strong>No hay profesionales disponibles</strong> para este lead.</p>\n    \n    <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <h3 style=\"margin-top: 0;\">📋 Datos del Cliente:</h3>\n      <ul style=\"margin: 10px 0;\">\n        <li><strong>Nombre:</strong> {{$json.name}}</li>\n        <li><strong>Email:</strong> {{$json.email}}</li>\n        <li><strong>Teléfono:</strong> {{$json.phone}}</li>\n        <li><strong>Región:</strong> {{$json.detectedRegion}}</li>\n        <li><strong>Tipo:</strong> {{$json.closureType}}</li>\n      </ul>\n    </div>\n    \n    <h3>Acciones:</h3>\n    <ol>\n      <li>Entra al dashboard de Airtable</li>\n      <li>Busca este lead en tabla \"Leads\" con Status \"New\"</li>\n      <li>Asigna manualmente a un profesional</li>\n      <li>Notifica al profesional por email</li>\n    </ol>\n  </div>\n</div>"
+      },
+      "id": "13-email-to-admin",
+      "name": "Alert Admin - No Professional Available",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "admin@presupuestoya.com",
+        "subject": "❌ Lead Rechazado - Datos Inválidos: {{$json.name}}",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #d33b27; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">❌ Validación Fallida</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>El siguiente lead fue <strong>rechazado</strong> por datos inválidos:</p>\n    \n    <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <pre style=\"margin: 0; white-space: pre-wrap; font-size: 12px;\">{{JSON.stringify($json, null, 2)}}</pre>\n    </div>\n    \n    <p style=\"color: #5f6368; font-size: 13px;\">\n      Por favor revisa los datos del formulario.\n    </p>\n  </div>\n</div>"
+      },
+      "id": "14-email-validation-error",
+      "name": "Alert Admin - Validation Error",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "15-success-log",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "16-error-log",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "1-webhook": {
+      "main": [
+        [
+          {
+            "node": "2-validate-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2-validate-lead": {
+      "main": [
+        [
+          {
+            "node": "3-validate-required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3-validate-required": {
+      "main": [
+        [
+          {
+            "node": "4-get-regions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14-email-validation-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4-get-regions": {
+      "main": [
+        [
+          {
+            "node": "5-match-region",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5-match-region": {
+      "main": [
+        [
+          {
+            "node": "6-get-professionals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6-get-professionals": {
+      "main": [
+        [
+          {
+            "node": "7-select-best-professional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7-select-best-professional": {
+      "main": [
+        [
+          {
+            "node": "8-professional-found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8-professional-found": {
+      "main": [
+        [
+          {
+            "node": "9-create-lead-assigned",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10-create-lead-manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9-create-lead-assigned": {
+      "main": [
+        [
+          {
+            "node": "11-email-to-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10-create-lead-manual": {
+      "main": [
+        [
+          {
+            "node": "13-email-to-admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11-email-to-lead": {
+      "main": [
+        [
+          {
+            "node": "12-email-to-professional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12-email-to-professional": {
+      "main": [
+        [
+          {
+            "node": "15-success-log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14-email-validation-error": {
+      "main": [
+        [
+          {
+            "node": "16-error-log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

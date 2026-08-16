@@ -1,0 +1,37 @@
+{
+  "name": "presupuestoya-app",
+  "version": "1.0.0",
+  "description": "Platform for lead generation and geographic routing for windows and closures (ventanas y cerramientos a medida)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "presupuestoya",
+    "leads",
+    "ventanas",
+    "cerramientos",
+    "webhook",
+    "form",
+    "conversion"
+  ],
+  "author": "Presupuestoya Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/presupuestoya9-eng/presupuestoya.git"
+  }
+}

@@ -1,0 +1,377 @@
+{
+  "name": "Presupuestoya - Automatic Follow-up Flow",
+  "description": "Follow-up automático: Revisa leads sin respuesta, renotifica a profesionales, escala a admin si es necesario",
+  "tags": [
+    "presupuestoya",
+    "followup",
+    "automation",
+    "timebased"
+  ],
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerType": "every",
+        "unit": "hours",
+        "value": 24
+      },
+      "id": "1-schedule-24h",
+      "name": "Check Every 24 Hours",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        50,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Assigned', {DateAssigned} <= TODAY()-1)",
+          "fields": [
+            "Name",
+            "Email",
+            "Phone",
+            "PostalCode",
+            "Region",
+            "ClosureType",
+            "AssignedTo",
+            "DateAssigned",
+            "Status"
+          ],
+          "maxRecords": 100
+        }
+      },
+      "id": "2-get-leads-24h-no-response",
+      "name": "Get Leads Without Response (24h+)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        250,
+        200
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "list",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Assigned', {DateAssigned} <= TODAY()-3)",
+          "fields": [
+            "Name",
+            "Email",
+            "Phone",
+            "PostalCode",
+            "Region",
+            "ClosureType",
+            "AssignedTo",
+            "DateAssigned",
+            "Status"
+          ],
+          "maxRecords": 100
+        }
+      },
+      "id": "3-get-leads-72h-no-response",
+      "name": "Get Leads Without Response (72h+)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        250,
+        400
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "iterateOver": "all"
+      },
+      "id": "4-for-each-24h-lead",
+      "name": "For Each 24h Lead",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "iterateOver": "all"
+      },
+      "id": "5-for-each-72h-lead",
+      "name": "For Each 72h Lead",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "={{$json.fields.Email}}",
+        "subject": "⏰ Te recordamos tu solicitud de presupuesto",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #fbbc04; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">⏰ Recordatorio</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>Hola <strong>{{$json.fields.Name}}</strong>,</p>\n    <p>Hace más de 24 horas que solicitaste tu presupuesto para <strong>{{$json.fields.ClosureType}}</strong>.</p>\n    \n    <div style=\"background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <p style=\"margin: 0;\"><strong>📋 Tu solicitud:</strong></p>\n      <p style=\"margin: 5px 0;\">📍 {{$json.fields.Region}} - {{$json.fields.PostalCode}}</p>\n      <p style=\"margin: 5px 0;\">🪟 {{$json.fields.ClosureType}}</p>\n    </div>\n    \n    <p style=\"color: #202124;\"><strong>¿Qué pasa ahora?</strong></p>\n    <p>Nuestro profesional está preparando tu presupuesto personalizado. Te contactaremos pronto con opciones ajustadas a tus necesidades.</p>\n    \n    <p style=\"color: #5f6368; font-size: 13px;\">\n      Si necesitas respuesta urgente, puedes responder a este email o llamarnos.\n    </p>\n  </div>\n</div>"
+      },
+      "id": "6-email-follow-up-24h",
+      "name": "Send Follow-up Email 24h",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "={{$json.fields.Email}}",
+        "subject": "🔔 Urgente: Solicitud de presupuesto pendiente",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #d33b27; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">🔔 Acción Requerida</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>Hola <strong>{{$json.fields.Name}}</strong>,</p>\n    <p>Hace <strong>más de 3 días</strong> que solicitaste tu presupuesto y aún no hemos recibido respuesta confirmada.</p>\n    \n    <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #d33b27;\">\n      <p style=\"margin: 0;\"><strong>⚠️ Tu solicitud puede ser cancelada</strong></p>\n      <p style=\"margin: 5px 0; font-size: 13px;\">Para continuar, confirma que aún necesitas el presupuesto.</p>\n    </div>\n    \n    <p><strong>¿Cómo confirmar?</strong></p>\n    <ol>\n      <li>Responde a este email con \"Confirmo\"</li>\n      <li>O llámanos directamente</li>\n      <li>Recibirás tu presupuesto en 24 horas</li>\n    </ol>\n    \n    <p style=\"color: #5f6368; font-size: 13px;\">\n      Si ya no necesitas el presupuesto, simplemente ignora este mensaje.\n    </p>\n  </div>\n</div>"
+      },
+      "id": "7-email-follow-up-72h",
+      "name": "Send Follow-up Email 72h (Urgent)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "={{$json.fields.AssignedTo[0].fields.Email}}",
+        "subject": "🔔 URGENTE: Lead {{$json.fields.Name}} requiere atención",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #d33b27; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">🔴 URGENTE: Sin respuesta en 24 horas</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p>Hola <strong>{{$json.fields.AssignedTo[0].fields.Name}}</strong>,</p>\n    <p>El lead <strong>{{$json.fields.Name}}</strong> lleva <strong>más de 24 horas sin respuesta</strong>.</p>\n    \n    <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <p style=\"margin: 0;\"><strong>📞 Contacto Urgente:</strong></p>\n      <p style=\"margin: 5px 0;\">📱 {{$json.fields.Phone}}</p>\n      <p style=\"margin: 5px 0;\">✉️ {{$json.fields.Email}}</p>\n      <p style=\"margin: 5px 0;\">📍 {{$json.fields.Region}} ({{$json.fields.PostalCode}})</p>\n      <p style=\"margin: 5px 0;\">🪟 {{$json.fields.ClosureType}}</p>\n    </div>\n    \n    <p><strong>Acciones:</strong></p>\n    <ol>\n      <li>Contacta al cliente YA (teléfono)</li>\n      <li>Si no responde → Envía presupuesto por email</li>\n      <li>Marca como \"In Progress\" en Airtable</li>\n    </ol>\n    \n    <p style=\"color: #d33b27; font-weight: bold; margin: 20px 0;\">\n      ⏱️ Tienes 24 horas antes de escalar a equipo administrativo\n    </p>\n  </div>\n</div>"
+      },
+      "id": "8-email-escalate-professional-24h",
+      "name": "Send Escalation Email to Professional (24h)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@presupuestoya.com",
+        "toEmail": "admin@presupuestoya.com",
+        "subject": "🚨 CRÍTICO: Lead {{$json.fields.Name}} sin respuesta desde 72h",
+        "textOnly": false,
+        "htmlBody": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #d33b27; color: white; padding: 20px; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"margin: 0;\">🚨 CRÍTICO: Sin Respuesta 72h+</h1>\n  </div>\n  <div style=\"padding: 20px; border: 1px solid #e8eaed; border-top: none;\">\n    <p><strong>El profesional no ha respondido en 72 horas.</strong></p>\n    \n    <div style=\"background: #fce8e6; padding: 15px; border-radius: 6px; margin: 20px 0;\">\n      <p style=\"margin: 0;\"><strong>📊 Lead Details:</strong></p>\n      <ul style=\"margin: 10px 0;\">\n        <li>Cliente: {{$json.fields.Name}}</li>\n        <li>Email: {{$json.fields.Email}}</li>\n        <li>Teléfono: {{$json.fields.Phone}}</li>\n        <li>Región: {{$json.fields.Region}}</li>\n        <li>Tipo: {{$json.fields.ClosureType}}</li>\n        <li>Profesional: {{$json.fields.AssignedTo[0].fields.Name}}</li>\n        <li>Asignado hace: {{$json.fields.DateAssigned}}</li>\n      </ul>\n    </div>\n    \n    <p><strong>Acciones Requeridas:</strong></p>\n    <ol>\n      <li>Contactar profesional directamente (teléfono)</li>\n      <li>Si no responde → Reasignar a otro profesional</li>\n      <li>Si no hay disponible → Contactar cliente directamente</li>\n      <li>Si cliente cancela → Marcar como \"Rejected\"</li>\n    </ol>\n  </div>\n</div>"
+      },
+      "id": "9-email-escalate-admin-72h",
+      "name": "Send Escalation Email to Admin (72h)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "update",
+        "table": "Leads",
+        "id": "={{$json.id}}",
+        "fields": {
+          "Status": "In Progress"
+        }
+      },
+      "id": "10-update-status-24h-started",
+      "name": "Mark Status 'In Progress' (24h)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        850,
+        200
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "record",
+        "operation": "update",
+        "table": "Leads",
+        "id": "={{$json.id}}",
+        "fields": {
+          "Status": "Completed"
+        }
+      },
+      "id": "11-mark-as-completed-if-exists",
+      "name": "Auto-complete if No Response (7 days)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 3,
+      "position": [
+        850,
+        450
+      ],
+      "credentials": {
+        "airtableApi": "airtable_oauth2"
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "immediately",
+        "includeExecutionData": true
+      },
+      "id": "12-log-complete",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "1-schedule-24h": {
+      "main": [
+        [
+          {
+            "node": "2-get-leads-24h-no-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1-schedule-24h": {
+      "main": [
+        [
+          {
+            "node": "3-get-leads-72h-no-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2-get-leads-24h-no-response": {
+      "main": [
+        [
+          {
+            "node": "4-for-each-24h-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3-get-leads-72h-no-response": {
+      "main": [
+        [
+          {
+            "node": "5-for-each-72h-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4-for-each-24h-lead": {
+      "main": [
+        [
+          {
+            "node": "6-email-follow-up-24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5-for-each-72h-lead": {
+      "main": [
+        [
+          {
+            "node": "7-email-follow-up-72h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6-email-follow-up-24h": {
+      "main": [
+        [
+          {
+            "node": "8-email-escalate-professional-24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8-email-escalate-professional-24h": {
+      "main": [
+        [
+          {
+            "node": "10-update-status-24h-started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7-email-follow-up-72h": {
+      "main": [
+        [
+          {
+            "node": "9-email-escalate-admin-72h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9-email-escalate-admin-72h": {
+      "main": [
+        [
+          {
+            "node": "11-mark-as-completed-if-exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10-update-status-24h-started": {
+      "main": [
+        [
+          {
+            "node": "12-log-complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
