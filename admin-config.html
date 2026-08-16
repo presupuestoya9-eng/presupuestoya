@@ -405,13 +405,27 @@ Datos esperados en webhook:
         const DEFAULT_WEBHOOK = 'https://webhook.site/your-unique-id'; // RequestBin de prueba
 
         // Load configuration on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadConfig();
-            updateStatus();
-            document.getElementById('configForm').addEventListener('submit', saveConfig);
-            document.getElementById('testBtn').addEventListener('click', sendTest);
-            document.getElementById('resetBtn').addEventListener('click', resetConfig);
-        });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePanel);
+        } else {
+            initializePanel();
+        }
+
+        function initializePanel() {
+            try {
+                loadConfig();
+                updateStatus();
+                const form = document.getElementById('configForm');
+                const testBtn = document.getElementById('testBtn');
+                const resetBtn = document.getElementById('resetBtn');
+
+                if (form) form.addEventListener('submit', saveConfig);
+                if (testBtn) testBtn.addEventListener('click', sendTest);
+                if (resetBtn) resetBtn.addEventListener('click', resetConfig);
+            } catch (e) {
+                console.error('Error inicializando panel:', e);
+            }
+        }
 
         function loadConfig() {
             const config = localStorage.getItem(CONFIG_KEY);
@@ -456,7 +470,7 @@ Datos esperados en webhook:
         }
 
         async function sendTest(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) e.preventDefault();
 
             const config = localStorage.getItem(CONFIG_KEY);
             if (!config) {
@@ -469,12 +483,12 @@ Datos esperados en webhook:
 
             const testData = {
                 timestamp: new Date().toISOString(),
-                name: document.getElementById('testName').value || 'Test User',
-                phone: document.getElementById('testPhone').value || '+34 612345678',
-                email: document.getElementById('testEmail').value || 'test@presupuestoya.com',
-                postalCode: document.getElementById('testPostalCode').value || '28001',
-                region: getRegionFromPostalCode(document.getElementById('testPostalCode').value || '28001'),
-                closureType: document.getElementById('testClosureType').value,
+                name: safeDOMAccess('testName', 'value') || 'Test User',
+                phone: safeDOMAccess('testPhone', 'value') || '+34 612345678',
+                email: safeDOMAccess('testEmail', 'value') || 'test@presupuestoya.com',
+                postalCode: safeDOMAccess('testPostalCode', 'value') || '28001',
+                region: getRegionFromPostalCode(safeDOMAccess('testPostalCode', 'value') || '28001'),
+                closureType: safeDOMAccess('testClosureType', 'value'),
                 message: 'Envío de prueba desde panel de administración',
                 source: 'presupuestoya-admin-test',
                 userAgent: navigator.userAgent
@@ -483,8 +497,10 @@ Datos esperados en webhook:
             const resultDiv = document.getElementById('testResult');
             const contentDiv = document.getElementById('testResultContent');
 
-            contentDiv.innerHTML = '<div class="spinner"></div> Enviando prueba...';
-            resultDiv.classList.add('show');
+            if (resultDiv && contentDiv) {
+                contentDiv.innerHTML = '<div class="spinner"></div> Enviando prueba...';
+                resultDiv.classList.add('show');
+            }
 
             try {
                 const response = await fetch(webhookUrl, {
@@ -586,6 +602,19 @@ Datos esperados en webhook:
             };
             const prefix = postalCode.substring(0, 2);
             return regions[prefix] || 'Desconocida';
+        }
+
+        function safeDOMAccess(elementId, property) {
+            try {
+                const element = document.getElementById(elementId);
+                if (element && property in element) {
+                    return element[property];
+                }
+                return null;
+            } catch (e) {
+                console.error('Error accediendo a DOM:', elementId, e);
+                return null;
+            }
         }
     </script>
 </body>
