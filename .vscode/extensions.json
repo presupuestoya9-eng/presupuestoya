@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "github.vscode-pull-request-github",
+    "dbaeumer.vscode-eslint",
+    "ritwickdey.liveserver",
+    "mikestead.dotenv"
+  ]
+}
