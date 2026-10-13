@@ -18,8 +18,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 // Middleware
 app.use(cors());
@@ -112,40 +110,6 @@ app.post('/api/leads', async (req, res) => {
 });
 
 /**
- * POST /api/ai/generate - Generate text with Gemini (Google AI Studio)
- * Body: { prompt: string, system?: string }
- */
-app.post('/api/ai/generate', async (req, res) => {
-    if (!GEMINI_API_KEY) {
-        return res.status(503).json({ success: false, message: 'GEMINI_API_KEY not configured' });
-    }
-    const { prompt, system } = req.body || {};
-    if (!prompt || typeof prompt !== 'string') {
-        return res.status(400).json({ success: false, message: 'prompt is required' });
-    }
-    try {
-        const body = { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
-        if (system) body.systemInstruction = { parts: [{ text: String(system) }] };
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
-                body: JSON.stringify(body),
-            }
-        );
-        const data = await response.json();
-        if (!response.ok) {
-            return res.status(502).json({ success: false, message: data.error?.message || 'Gemini error' });
-        }
-        const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-        res.json({ success: true, text });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
-    }
-});
-
-/**
  * GET /api/health - Health check endpoint
  */
 app.get('/api/health', (req, res) => {
@@ -153,7 +117,6 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         webhook_configured: !!WEBHOOK_URL,
-        gemini_configured: !!GEMINI_API_KEY,
     });
 });
 
