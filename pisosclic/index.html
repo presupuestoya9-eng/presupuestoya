@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alquiler en Valencia donde la Propiedad te Encuentra | PisosClic</title>
+  <meta name="description" content="PisosClic: registra tu perfil económico validado y la propiedad ideal te encuentra. Matchmaking de alquiler en Valencia y Comunidad Valenciana para inquilinos, propietarios e inmobiliarias.">
+  <link rel="canonical" href="https://pisosclic.com/">
+  <meta property="og:title" content="PisosClic | Aquí no buscas piso, el piso te encuentra">
+  <meta property="og:description" content="Perfil validado + matchmaking automático por zona y presupuesto. Alquiler en Valencia sin portales ni anuncios obsoletos.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pisosclic.com/">
+  <meta name="theme-color" content="#0052FF">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { DEFAULT: '#0052FF', dark: '#0040C9', soft: '#E8EFFF' },
+            turq: { DEFAULT: '#00C49F', soft: '#E0F8F3' },
+            ink: '#111827',
+            success: '#10B981',
+            mist: '#F9FAFB'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+    .tab-active { background:#0052FF; color:#fff; box-shadow:0 8px 20px -8px rgba(0,82,255,.6); }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "PisosClic",
+    "url": "https://pisosclic.com/",
+    "email": "info@pisosclic.com",
+    "areaServed": ["Valencia", "Comunidad Valenciana"],
+    "description": "Plataforma de matchmaking de alquiler: el perfil validado del inquilino se cruza con la propiedad ideal."
+  }
+  </script>
+</head>
+
+<body class="font-sans text-ink bg-white antialiased">
+
+  <!-- 1. HEADER -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between" aria-label="Principal">
+      <a href="#inicio" class="flex items-center gap-2 font-extrabold text-xl tracking-tight">
+        <span class="w-8 h-8 rounded-xl bg-brand text-white grid place-items-center text-sm">P</span>
+        <span>Pisos<span class="text-brand">Clic</span><span class="text-gray-400 font-semibold">.com</span></span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <a href="#como-funciona" class="hover:text-brand transition">¿Cómo funciona?</a>
+        <a href="#formularios" data-tab="inquilino" class="tab-link hover:text-brand transition">Para Inquilinos</a>
+        <a href="#formularios" data-tab="propietario" class="tab-link hover:text-brand transition">Para Inmobiliarias/Propietarios</a>
+      </div>
+      <a href="#formularios" data-tab="inquilino" class="tab-link inline-flex items-center rounded-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 transition shadow-lg shadow-brand/25">
+        Crear Perfil
+      </a>
+    </nav>
+  </header>
+
+  <main id="inicio">
+
+    <!-- 2. HERO -->
+    <section class="relative overflow-hidden bg-white">
+      <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-turq-soft blur-3xl opacity-70" aria-hidden="true"></div>
+      <div class="absolute -bottom-32 -left-24 w-96 h-96 rounded-full bg-brand-soft blur-3xl opacity-70" aria-hidden="true"></div>
+
+      <div class="relative max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
+        <span class="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 text-emerald-700 text-xs sm:text-sm font-semibold px-4 py-1.5">
+          🚀 La nueva forma de alquilar en Valencia y Comunidad Valenciana
+        </span>
+
+        <h1 class="mt-6 text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
+          La Herramienta de Alquiler donde la Propiedad Busca a su
+          <span class="text-brand">Inquilino Ideal</span>
+          <span class="block mt-3 text-lg sm:text-2xl font-bold text-gray-400">| PisosClic</span>
+        </h1>
+
+        <p class="mt-6 text-base sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          Olvídate de refrescar portales de anuncios. Completa tu perfil económico o registra tu inmueble y nuestro algoritmo de matchmaking hace el cruce perfecto.
+        </p>
+
+        <!-- Doble CTA -->
+        <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="https://tally.so/r/7RVPr6" target="_blank" rel="noopener"
+             class="inline-flex items-center justify-center rounded-2xl bg-brand hover:bg-brand-dark text-white font-bold text-base sm:text-lg px-7 py-4 transition shadow-xl shadow-brand/30 hover:-translate-y-0.5">
+            🎯 Buscar Piso (Soy Inquilino)
+          </a>
+          <!-- TODO: sustituir href por la URL del formulario de Inmobiliarias (https://tally.so/r/XXXXXX) -->
+          <a href="#formularios" data-tab="propietario" id="cta-propietario"
+             class="tab-link inline-flex items-center justify-center rounded-2xl bg-ink hover:bg-black text-white font-bold text-base sm:text-lg px-7 py-4 transition shadow-xl shadow-gray-900/20 hover:-translate-y-0.5">
+            🏠 Publicar Propiedad (Soy Propietario / Agencia)
+          </a>
+        </div>
+
+        <p class="mt-6 text-sm text-gray-500">
+          ✔ Gratis para inquilinos &nbsp;·&nbsp; ✔ Solo 2 minutos &nbsp;·&nbsp; ✔ Datos protegidos (RGPD)
+        </p>
+      </div>
+    </section>
+
+    <!-- 3. DIFERENCIAL -->
+    <section id="diferencial" class="bg-mist py-20 sm:py-24">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-2xl mx-auto">
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Aquí no buscas piso.<br class="hidden sm:block"> <span class="text-brand">El piso te encuentra a ti.</span></h2>
+          <p class="mt-4 text-gray-600">Registras tu perfil validado y la propiedad ideal te encuentra. Deja de perder tiempo en portales llenos de fotos obsoletas.</p>
+        </div>
+
+        <div class="mt-12 grid md:grid-cols-2 gap-6">
+          <!-- Método antiguo -->
+          <article class="bg-white rounded-2xl border border-gray-200 p-7 sm:p-8">
+            <p class="text-xs font-bold uppercase tracking-wider text-gray-400">El método antiguo</p>
+            <h3 class="mt-1 text-xl font-bold text-gray-700">Portales tradicionales</h3>
+            <ul class="mt-6 space-y-4 text-gray-600">
+              <li class="flex gap-3"><span class="text-red-500 font-bold">✕</span> Anuncios falsos o ya alquilados que siguen publicados</li>
+              <li class="flex gap-3"><span class="text-red-500 font-bold">✕</span> Llamadas y mensajes que nadie contesta</li>
+              <li class="flex gap-3"><span class="text-red-500 font-bold">✕</span> Horas refrescando la pantalla y compitiendo con 80 personas</li>
+              <li class="flex gap-3"><span class="text-red-500 font-bold">✕</span> Propietarios saturados que no saben quién es solvente</li>
+            </ul>
+          </article>
+
+          <!-- PisosClic -->
+          <article class="relative bg-white rounded-2xl border-2 border-brand p-7 sm:p-8 shadow-xl shadow-brand/10">
+            <span class="absolute -top-3 right-6 rounded-full bg-success text-white text-xs font-bold px-3 py-1">Match validado</span>
+            <p class="text-xs font-bold uppercase tracking-wider text-brand">El método PisosClic</p>
+            <h3 class="mt-1 text-xl font-bold">Matchmaking inteligente</h3>
+            <ul class="mt-6 space-y-4">
+              <li class="flex gap-3"><span class="text-success font-bold">✓</span> <span><strong>Perfil económico validado</strong> para inquilinos de confianza</span></li>
+              <li class="flex gap-3"><span class="text-success font-bold">✓</span> <span><strong>Matchmaking automático</strong> por zona y presupuesto</span></li>
+              <li class="flex gap-3"><span class="text-success font-bold">✓</span> <span><strong>Privacidad RGPD</strong>: tus datos solo se comparten si hay match</span></li>
+              <li class="flex gap-3"><span class="text-success font-bold">✓</span> <span><strong>Contacto directo</strong> entre las dos partes, sin intermediarios</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CÓMO FUNCIONA -->
+    <section id="como-funciona" class="bg-white py-20 sm:py-24">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-2xl mx-auto">
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Cómo funciona en <span class="text-brand">3 pasos</span></h2>
+          <p class="mt-4 text-gray-600">Sin registros eternos ni tecnicismos.</p>
+        </div>
+
+        <ol class="mt-12 grid md:grid-cols-3 gap-6">
+          <li class="rounded-2xl border border-gray-100 bg-mist p-7">
+            <span class="w-11 h-11 rounded-xl bg-brand text-white font-extrabold grid place-items-center">1</span>
+            <h3 class="mt-5 text-lg font-bold">Completa tu perfil</h3>
+            <p class="mt-2 text-gray-600">Rellena tu perfil de inquilino o da de alta tu propiedad en 2 minutos.</p>
+          </li>
+          <li class="rounded-2xl border border-gray-100 bg-mist p-7">
+            <span class="w-11 h-11 rounded-xl bg-turq text-white font-extrabold grid place-items-center">2</span>
+            <h3 class="mt-5 text-lg font-bold">Calculamos el match</h3>
+            <p class="mt-2 text-gray-600">Nuestro motor calcula la compatibilidad y la solvencia (0-100).</p>
+          </li>
+          <li class="rounded-2xl border border-gray-100 bg-mist p-7">
+            <span class="w-11 h-11 rounded-xl bg-success text-white font-extrabold grid place-items-center">3</span>
+            <h3 class="mt-5 text-lg font-bold">Recibe tu match</h3>
+            <p class="mt-2 text-gray-600">Te llega el match perfecto a tu correo y ambas partes inician la negociación.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 5. FORMULARIOS -->
+    <section id="formularios" class="bg-mist py-20 sm:py-24">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="text-center">
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Empieza ahora, <span class="text-brand">sin salir de aquí</span></h2>
+          <p class="mt-4 text-gray-600">Elige tu perfil y completa el formulario.</p>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+          <div role="tablist" class="inline-flex p-1.5 rounded-full bg-white border border-gray-200 shadow-sm gap-1">
+            <button role="tab" id="tab-inquilino" data-tab="inquilino" aria-selected="true"
+                    class="tab-btn tab-active rounded-full px-4 sm:px-6 py-2.5 text-sm font-semibold transition">🎯 Soy Inquilino</button>
+            <button role="tab" id="tab-propietario" data-tab="propietario" aria-selected="false"
+                    class="tab-btn text-gray-600 rounded-full px-4 sm:px-6 py-2.5 text-sm font-semibold transition">🏠 Soy Propietario / Agencia</button>
+          </div>
+        </div>
+
+        <div class="mt-8 rounded-2xl bg-white border border-gray-200 shadow-xl shadow-gray-900/5 p-3 sm:p-6">
+          <!-- Contenedor 1: Inquilino -->
+          <div id="panel-inquilino" role="tabpanel" aria-labelledby="tab-inquilino">
+            <iframe data-tally-src="https://tally.so/embed/7RVPr6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+                    loading="lazy" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0"
+                    title="Formulario de perfil de inquilino - PisosClic"></iframe>
+            <noscript><a class="text-brand underline" href="https://tally.so/r/7RVPr6">Abrir formulario de inquilino</a></noscript>
+          </div>
+
+          <!-- Contenedor 2: Propietario / Inmobiliaria -->
+          <div id="panel-propietario" role="tabpanel" aria-labelledby="tab-propietario" class="hidden">
+            <!-- TODO: sustituir XXXXXX por el ID del formulario de inmobiliarias en Tally -->
+            <iframe data-tally-src="https://tally.so/embed/XXXXXX?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+                    loading="lazy" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0"
+                    title="Formulario de propietarios e inmobiliarias - PisosClic"></iframe>
+            <div id="owner-placeholder" class="hidden text-center py-16 px-4">
+              <p class="text-lg font-bold">Formulario de Propietarios / Inmobiliarias</p>
+              <p class="mt-2 text-gray-600">Muy pronto disponible. Mientras tanto escríbenos a
+                <a class="text-brand underline" href="mailto:info@pisosclic.com">info@pisosclic.com</a>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 6. FOOTER -->
+  <footer class="bg-ink text-gray-300">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-14 grid gap-10 md:grid-cols-3">
+      <div>
+        <a href="#inicio" class="font-extrabold text-xl text-white">Pisos<span class="text-turq">Clic</span>.com</a>
+        <p class="mt-3 text-sm leading-relaxed">Alquiler por matchmaking en Valencia y Comunidad Valenciana. La propiedad busca a su inquilino ideal.</p>
+        <p class="mt-4 text-sm">
+          Soporte: <a class="text-white underline" href="mailto:info@pisosclic.com">info@pisosclic.com</a>
+        </p>
+      </div>
+
+      <nav aria-label="Zonas de Valencia">
+        <h3 class="text-white font-bold text-sm uppercase tracking-wider">Alquiler en Valencia</h3>
+        <ul class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Benicalap</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Campanar</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Extramurs</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Ruzafa</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en El Carmen</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Patraix</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Benimaclet</a></li>
+          <li><a href="#formularios" class="hover:text-white">Alquiler en Camins al Grau</a></li>
+        </ul>
+      </nav>
+
+      <div>
+        <h3 class="text-white font-bold text-sm uppercase tracking-wider">Privacidad y RGPD</h3>
+        <p class="mt-4 text-sm leading-relaxed">
+          Tratamos tus datos conforme al RGPD. La información de tu perfil solo se comparte con la otra parte cuando existe un match.
+          El vídeo de presentación es <strong class="text-white">opcional</strong>; si lo aportas, su imagen y voz se consideran datos sensibles
+          y solo se tratan con tu consentimiento explícito, que puedes retirar cuando quieras escribiendo a
+          <a class="text-white underline" href="mailto:info@pisosclic.com">info@pisosclic.com</a>.
+        </p>
+        <ul class="mt-4 flex gap-4 text-sm">
+          <li><a href="/aviso-legal" class="hover:text-white underline">Aviso legal</a></li>
+          <li><a href="/privacidad" class="hover:text-white underline">Privacidad</a></li>
+          <li><a href="/cookies" class="hover:text-white underline">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 py-5 text-center text-xs text-gray-500">
+      © <span id="year">2026</span> PisosClic.com · Todos los derechos reservados
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var tabs = { inquilino: document.getElementById('panel-inquilino'), propietario: document.getElementById('panel-propietario') };
+      var btns = document.querySelectorAll('.tab-btn');
+      var loaded = {};
+
+      function loadFrames(panel) {
+        panel.querySelectorAll('iframe[data-tally-src]').forEach(function (f) {
+          if (!f.src) f.src = f.getAttribute('data-tally-src');
+        });
+      }
+
+      function show(name) {
+        Object.keys(tabs).forEach(function (k) { tabs[k].classList.toggle('hidden', k !== name); });
+        btns.forEach(function (b) {
+          var on = b.dataset.tab === name;
+          b.setAttribute('aria-selected', on);
+          b.classList.toggle('tab-active', on);
+          b.classList.toggle('text-gray-600', !on);
+        });
+        if (!loaded[name]) { loadFrames(tabs[name]); loaded[name] = true; }
+      }
+
+      btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+      document.querySelectorAll('.tab-link').forEach(function (a) {
+        a.addEventListener('click', function () { show(a.dataset.tab); });
+      });
+
+      // Si el formulario de propietarios aún no está configurado, muestra aviso en vez de un iframe roto.
+      var ownerFrame = tabs.propietario.querySelector('iframe');
+      if (ownerFrame.getAttribute('data-tally-src').indexOf('XXXXXX') !== -1) {
+        ownerFrame.remove();
+        document.getElementById('owner-placeholder').classList.remove('hidden');
+      }
+
+      show(location.hash === '#propietario' ? 'propietario' : 'inquilino');
+      document.getElementById('year').textContent = new Date().getFullYear();
+    })();
+  </script>
+</body>
+</html>
